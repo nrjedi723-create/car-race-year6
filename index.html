@@ -1,0 +1,2406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CAR RACING: ENGLISH CHALLENGE YEAR 6</title>
+  <style>
+    :root {
+      --primary: #ff3366;
+      --accent: #00d2ff;
+      --yellow: #ffd000;
+      --green: #2ecc71;
+      --dark: #0f1423;
+      --card-bg: rgba(20, 27, 45, 0.95);
+      --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background-color: var(--dark);
+      color: #ffffff;
+      font-family: var(--font-main);
+      overflow: hidden;
+      touch-action: none;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* GAME CONTAINER & CANVAS */
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 1200px;
+      max-height: 800px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #111;
+    }
+
+    /* TOP HUD BAR */
+    #hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(180deg, rgba(15,20,35,0.95) 0%, rgba(15,20,35,0.6) 80%, transparent 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 18px;
+      z-index: 10;
+      pointer-events: none;
+      font-size: 14px;
+    }
+    .hud-stat {
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 5px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .hud-stat span.val {
+      color: var(--yellow);
+    }
+    .hud-btn {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .hud-btn:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* TOUCH CONTROLS OVERLAY */
+    #mobile-controls {
+      position: absolute;
+      bottom: 12px;
+      left: 0;
+      right: 0;
+      display: none;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 15;
+      pointer-events: none;
+    }
+    .control-cluster {
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
+    .touch-btn {
+      width: 66px;
+      height: 66px;
+      background: radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(30,40,65,0.85) 100%);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      color: white;
+      font-size: 26px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      user-select: none;
+    }
+    .touch-btn:active {
+      transform: scale(0.92);
+      background: var(--accent);
+      color: #000;
+      border-color: #fff;
+    }
+    .pedal-btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 18px;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #btn-gas {
+      background: linear-gradient(145deg, #2ecc71, #1e824c);
+      border: 2px solid #58d68d;
+    }
+    #btn-brake {
+      background: linear-gradient(145deg, #e74c3c, #962d22);
+      border: 2px solid #f1948a;
+    }
+
+    /* OVERLAYS & MODALS */
+    .screen-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 14, 25, 0.94);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+      overflow-y: auto;
+      text-align: center;
+    }
+    .screen-overlay.hidden {
+      display: none !important;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 26px 30px;
+      width: 100%;
+      max-width: 650px;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.6);
+      animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* TYPOGRAPHY & BUTTONS */
+    h1.game-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 0 15px rgba(0, 210, 255, 0.7), 2px 2px 0 #ff3366;
+      margin-bottom: 4px;
+    }
+    .tagline {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--yellow);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .btn {
+      background: linear-gradient(135deg, #ff3366, #ff6b8b);
+      color: #fff;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255, 51, 102, 0.45);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 51, 102, 0.65);
+    }
+    .btn:active {
+      transform: translateY(1px);
+    }
+    .btn-secondary {
+      background: linear-gradient(135deg, #00d2ff, #0072ff);
+      box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4);
+    }
+    .btn-secondary:hover {
+      box-shadow: 0 8px 25px rgba(0, 210, 255, 0.6);
+    }
+    .btn-green {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+    }
+
+    /* INPUT FIELDS */
+    .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .form-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+    }
+
+    /* CAR SELECTOR */
+    .car-select-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 15px 0 22px;
+    }
+    .car-option {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      border: 3px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, border-color 0.2s;
+      background: rgba(255,255,255,0.06);
+    }
+    .car-option.selected {
+      border-color: #fff;
+      transform: scale(1.15);
+      box-shadow: 0 0 15px var(--accent);
+    }
+
+    /* QUIZ MODAL */
+    #quiz-modal .card {
+      max-width: 680px;
+      border-color: var(--accent);
+      box-shadow: 0 0 35px rgba(0, 210, 255, 0.35);
+    }
+    .quiz-badge-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      font-weight: 800;
+    }
+    .quiz-level-tag {
+      background: var(--primary);
+      padding: 4px 12px;
+      border-radius: 15px;
+      letter-spacing: 1px;
+    }
+    .quiz-skill-tag {
+      background: rgba(255,255,255,0.15);
+      padding: 4px 12px;
+      border-radius: 15px;
+      color: var(--accent);
+    }
+    .comprehension-box {
+      background: rgba(0, 0, 0, 0.4);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      text-align: left;
+      margin-bottom: 14px;
+      color: #e2e8f0;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .quiz-question {
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.4;
+      margin: 15px 0 20px;
+      text-align: left;
+      color: #ffffff;
+    }
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .option-btn {
+      background: rgba(30, 41, 65, 0.8);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 600;
+      padding: 13px 18px;
+      border-radius: 14px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: rgba(0, 210, 255, 0.15);
+      transform: translateX(4px);
+    }
+    .option-btn .opt-badge {
+      background: rgba(255, 255, 255, 0.2);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+    }
+    .option-btn.correct {
+      background: rgba(46, 204, 113, 0.3) !important;
+      border-color: #2ecc71 !important;
+      color: #2ecc71 !important;
+    }
+    .option-btn.wrong {
+      background: rgba(231, 76, 60, 0.3) !important;
+      border-color: #e74c3c !important;
+      color: #e74c3c !important;
+    }
+    .quiz-feedback {
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 18px;
+      text-align: left;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .feedback-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feedback-explanation {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+
+    /* LEVEL BREAKDOWN & RESULTS */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .res-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .res-title {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .res-value {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--yellow);
+      margin-top: 4px;
+    }
+    .trophy-badge {
+      font-size: 4rem;
+      margin-bottom: 6px;
+      filter: drop-shadow(0 0 15px rgba(255, 208, 0, 0.6));
+      animation: bounce 1.2s infinite alternate;
+    }
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-8px); }
+    }
+    .achievement-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 14px 0 20px;
+    }
+    .ach-pill {
+      background: rgba(255, 208, 0, 0.15);
+      border: 1px solid var(--yellow);
+      color: var(--yellow);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* REVIEW SCROLLER */
+    #review-list {
+      max-height: 380px;
+      overflow-y: auto;
+      text-align: left;
+      margin: 15px 0;
+      padding-right: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .review-item {
+      background: rgba(15, 23, 42, 0.8);
+      border-left: 4px solid #fff;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .review-item.is-correct {
+      border-left-color: #2ecc71;
+    }
+    .review-item.is-wrong {
+      border-left-color: #e74c3c;
+    }
+
+    /* SCREEN SHAKE EFFECT */
+    .screen-shake {
+      animation: shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-3px, 0, 0); }
+      20%, 80% { transform: translate3d(5px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+      40%, 60% { transform: translate3d(5px, 0, 0); }
+    }
+
+    /* IN-CANVAS POPUP TEXT */
+    .floating-hud {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      background: rgba(0,0,0,0.6);
+      padding: 6px 18px;
+      border-radius: 20px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* SCROLLBAR CUSTOM */
+    ::-webkit-scrollbar {
+      width: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.25);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- CANVASES (TRACK & ENTITIES) -->
+  <canvas id="raceCanvas"></canvas>
+
+  <!-- TOP LIVE HEADS-UP DISPLAY -->
+  <div id="hud">
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="hud-stat">🏁 <span id="hud-level">LV 1</span></div>
+      <div class="hud-stat">👤 <span id="hud-player" class="val">-</span></div>
+      <div class="hud-stat">🏫 <span id="hud-class" class="val">-</span></div>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <div class="hud-stat">⭐ SCORE: <span id="hud-score" class="val">0</span></div>
+      <div class="hud-stat">🪙 COINS: <span id="hud-coins" class="val">0/10</span></div>
+      <div class="hud-stat">❓ QUIZ: <span id="hud-questions" class="val">0/10</span></div>
+      <button id="btn-sound-toggle" class="hud-btn" title="Toggle Sound">🔊</button>
+    </div>
+  </div>
+
+  <div id="floating-msg" class="floating-hud">Drive and collect all 10 Smiley Coins! 😊</div>
+
+  <!-- ON-SCREEN MOBILE CONTROLS (AUTODETECTS TOUCH) -->
+  <div id="mobile-controls">
+    <div class="control-cluster">
+      <div class="touch-btn" id="btn-left">◀</div>
+      <div class="touch-btn" id="btn-right">▶</div>
+    </div>
+    <div class="control-cluster">
+      <div class="touch-btn pedal-btn" id="btn-brake">REVERSE<br>BRAKE</div>
+      <div class="touch-btn pedal-btn" id="btn-gas">GAS<br>BOOST</div>
+    </div>
+  </div>
+
+  <!-- START / REGISTRATION SCREEN -->
+  <div id="start-screen" class="screen-overlay">
+    <div class="card">
+      <h1 class="game-title">CAR RACING</h1>
+      <div class="tagline">“Race, Think and Win!” • English Challenge Year 6</div>
+      
+      <div class="form-group">
+        <label for="player-name">Student's Full Name (Wajib / Required) *</label>
+        <input type="text" id="player-name" class="form-input" placeholder="e.g. Nur Aina binti Zulkifli" maxlength="32" autocomplete="off">
+      </div>
+
+      <div class="form-group">
+        <label for="player-class">Class (Wajib / Required) *</label>
+        <input type="text" id="player-class" class="form-input" placeholder="e.g. 6 Cemerlang / 6 Intelek" maxlength="20" autocomplete="off">
+      </div>
+
+      <div style="font-size:0.85rem; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-top:10px;">Select Racing Car:</div>
+      <div class="car-select-container">
+        <div class="car-option selected" data-color="#ff3366" title="Nitro Red">
+          <svg width="24" height="38" viewBox="0 0 24 38"><rect x="4" y="2" width="16" height="34" rx="6" fill="#ff3366"/><rect x="6" y="8" width="12" height="8" rx="2" fill="#111"/><circle cx="5" cy="8" r="3" fill="#333"/><circle cx="19" cy="8" r="3" fill="#333"/><circle cx="5" cy="30" r="3" fill="#333"/><circle cx="19" cy="30" r="3" fill="#333"/></svg>
+        </div>
+        <div class="car-option" data-color="#00d2ff" title="Electric Blue">
+          <svg width="24" height="38" viewBox="0 0 24 38"><rect x="4" y="2" width="16" height="34" rx="6" fill="#00d2ff"/><rect x="6" y="8" width="12" height="8" rx="2" fill="#111"/><circle cx="5" cy="8" r="3" fill="#333"/><circle cx="19" cy="8" r="3" fill="#333"/><circle cx="5" cy="30" r="3" fill="#333"/><circle cx="19" cy="30" r="3" fill="#333"/></svg>
+        </div>
+        <div class="car-option" data-color="#ffd000" title="Sunburst Yellow">
+          <svg width="24" height="38" viewBox="0 0 24 38"><rect x="4" y="2" width="16" height="34" rx="6" fill="#ffd000"/><rect x="6" y="8" width="12" height="8" rx="2" fill="#111"/><circle cx="5" cy="8" r="3" fill="#333"/><circle cx="19" cy="8" r="3" fill="#333"/><circle cx="5" cy="30" r="3" fill="#333"/><circle cx="19" cy="30" r="3" fill="#333"/></svg>
+        </div>
+        <div class="car-option" data-color="#2ecc71" title="Cyber Green">
+          <svg width="24" height="38" viewBox="0 0 24 38"><rect x="4" y="2" width="16" height="34" rx="6" fill="#2ecc71"/><rect x="6" y="8" width="12" height="8" rx="2" fill="#111"/><circle cx="5" cy="8" r="3" fill="#333"/><circle cx="19" cy="8" r="3" fill="#333"/><circle cx="5" cy="30" r="3" fill="#333"/><circle cx="19" cy="30" r="3" fill="#333"/></svg>
+        </div>
+      </div>
+
+      <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:12px; font-size:0.85rem; color:#cbd5e1; margin-bottom:20px; line-height:1.45;">
+        <strong>🏁 How to Play:</strong><br>
+        • Collect all <strong>10 Smiley Coins 😊</strong> on the circuit to trigger Year 6 English quizzes.<br>
+        • <strong>Correct:</strong> +10 Pts | <strong>Wrong:</strong> -5 Pts | <strong>Coin Pickup:</strong> +2 Pts | <strong>Obstacle Hit:</strong> -2 Pts.<br>
+        • Dodge cartoon bombs, crates, cones and oil slicks!<br>
+        • Keys: <strong>Arrow Keys / WASD</strong> on PC, or <strong>On-Screen Touch Buttons</strong> on Phone/Tablet.
+      </div>
+
+      <button id="btn-start" class="btn" style="width:100%; font-size:1.15rem;">🚀 START RACE</button>
+      <div id="start-err" style="color:#ff4757; font-weight:700; font-size:0.9rem; margin-top:10px; display:none;">
+        ⚠️ Sila masukkan Nama Murid dan Kelas sebelum memulakan perlumbaan!
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ POP-UP MODAL (TRIGGERED BY SMILEY COIN) -->
+  <div id="quiz-modal" class="screen-overlay hidden">
+    <div class="card">
+      <div class="quiz-badge-row">
+        <span id="quiz-qnum" class="quiz-level-tag">QUESTION 1/10</span>
+        <span id="quiz-level-label">LEVEL 1: GREEN VALLEY</span>
+        <span id="quiz-skill" class="quiz-skill-tag">Grammar</span>
+      </div>
+
+      <!-- Optional Reading Comprehension Passage -->
+      <div id="quiz-passage" class="comprehension-box" style="display:none;"></div>
+
+      <div id="quiz-text" class="quiz-question">Question text appears here?</div>
+
+      <div class="quiz-options">
+        <button class="option-btn" data-opt="A"><span class="opt-badge">A</span> <span class="opt-text" id="opt-a-text">Option A</span></button>
+        <button class="option-btn" data-opt="B"><span class="opt-badge">B</span> <span class="opt-text" id="opt-b-text">Option B</span></button>
+        <button class="option-btn" data-opt="C"><span class="opt-badge">C</span> <span class="opt-text" id="opt-c-text">Option C</span></button>
+      </div>
+
+      <!-- Feedback Area -->
+      <div id="quiz-feedback" class="quiz-feedback">
+        <div id="feedback-header" class="feedback-title"></div>
+        <div id="feedback-detail" class="feedback-explanation"></div>
+      </div>
+
+      <button id="btn-continue" class="btn btn-green" style="display:none; width:100%;">CONTINUE RACE 🏎️💨</button>
+    </div>
+  </div>
+
+  <!-- LEVEL COMPLETION SCREEN -->
+  <div id="level-complete-screen" class="screen-overlay hidden">
+    <div class="card">
+      <div style="font-size:3rem; margin-bottom:10px;">🏁 ⭐ 🏆</div>
+      <h2 id="lvl-done-title" style="font-size:1.8rem; font-weight:900; color:#fff; text-transform:uppercase;">LEVEL 1 COMPLETED!</h2>
+      <p id="lvl-done-subtitle" style="color:var(--yellow); font-weight:700; margin-bottom:18px;">Magnificent Driving & Grammar Skills!</p>
+
+      <div class="results-grid">
+        <div class="res-card">
+          <span class="res-title">Level Score</span>
+          <span id="lvl-done-score" class="res-value">0</span>
+        </div>
+        <div class="res-card">
+          <span class="res-title">Correct Answers</span>
+          <span id="lvl-done-correct" class="res-value" style="color:#2ecc71;">0/10</span>
+        </div>
+        <div class="res-card">
+          <span class="res-title">Total Points</span>
+          <span id="lvl-done-total" class="res-value">0</span>
+        </div>
+      </div>
+
+      <p id="lvl-done-msg" style="color:#cbd5e1; font-size:0.95rem; margin-bottom:20px;">
+        Get ready for sharper curves, tougher obstacles, and exciting English challenges!
+      </p>
+
+      <button id="btn-next-level" class="btn btn-secondary" style="width:100%; font-size:1.1rem;">PROCEED TO NEXT LEVEL ⏩</button>
+    </div>
+  </div>
+
+  <!-- FINAL GRAND PRIX RESULTS & CEREMONY SCREEN -->
+  <div id="final-screen" class="screen-overlay hidden">
+    <div class="card" style="max-width:720px;">
+      <div class="trophy-badge" id="final-trophy-icon">🏆</div>
+      <h1 id="final-award-title" style="font-size:2rem; font-weight:900; color:var(--yellow); text-transform:uppercase;">
+        ENGLISH RACING CHAMPION!
+      </h1>
+      <p id="final-congrats-line" style="font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:12px;">
+        CONGRATULATIONS, CHAMPION!
+      </p>
+      <div style="color:#94a3b8; font-size:0.9rem; margin-bottom:14px;">
+        “Keep learning, keep racing, and keep shining!”
+      </div>
+
+      <!-- Student Credentials -->
+      <div style="background:rgba(255,255,255,0.06); border-radius:12px; padding:10px 18px; display:flex; justify-content:space-around; font-size:0.95rem; font-weight:700; margin-bottom:15px;">
+        <div>RACER: <span id="final-name" style="color:var(--accent);">-</span></div>
+        <div>CLASS: <span id="final-class" style="color:var(--accent);">-</span></div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="results-grid">
+        <div class="res-card">
+          <span class="res-title">Overall Score</span>
+          <span id="final-total-score" class="res-value" style="color:#ff3366;">0</span>
+        </div>
+        <div class="res-card">
+          <span class="res-title">Accuracy Rate</span>
+          <span id="final-accuracy" class="res-value" style="color:#2ecc71;">0%</span>
+        </div>
+        <div class="res-card">
+          <span class="res-title">Total Correct</span>
+          <span id="final-correct-ratio" class="res-value">0/30</span>
+        </div>
+        <div class="res-card">
+          <span class="res-title">Coins Picked</span>
+          <span id="final-coins-count" class="res-value" style="color:var(--yellow);">30/30</span>
+        </div>
+      </div>
+
+      <!-- Level by Level Breakdown -->
+      <div style="display:flex; justify-content:space-between; gap:8px; font-size:0.85rem; font-weight:700; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:8px; margin-bottom:12px;">
+        <div>LV 1 Green Valley: <span id="final-l1-pts" style="color:var(--yellow);">0 pts</span></div>
+        <div>LV 2 Desert: <span id="final-l2-pts" style="color:var(--yellow);">0 pts</span></div>
+        <div>LV 3 Neon City: <span id="final-l3-pts" style="color:var(--yellow);">0 pts</span></div>
+      </div>
+
+      <!-- Special Category Badges Earned -->
+      <div class="achievement-pills" id="final-badges-list">
+        <!-- Dynamically injected badges -->
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+        <button id="btn-review" class="btn btn-secondary" style="width:100%;">📝 REVIEW MY ANSWERS (30/30)</button>
+        <div style="display:flex; gap:10px;">
+          <button id="btn-race-again" class="btn btn-green" style="flex:1;">🔄 RACE AGAIN</button>
+          <button id="btn-home" class="btn" style="flex:1; background:rgba(255,255,255,0.15); box-shadow:none;">🏠 BACK TO HOME</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANSWER REVIEW MODAL -->
+  <div id="review-modal" class="screen-overlay hidden">
+    <div class="card" style="max-width:760px; max-height:85vh; display:flex; flex-direction:column;">
+      <h2 style="font-size:1.5rem; font-weight:800; color:#fff; margin-bottom:8px;">ANSWER REVIEW & EXPLANATIONS</h2>
+      <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:10px;">Review all 30 questions to master Malaysian Year 6 English concepts.</p>
+      
+      <div id="review-list">
+        <!-- Injected question reviews -->
+      </div>
+
+      <button id="btn-close-review" class="btn btn-secondary" style="margin-top:10px; align-self:center; width:220px;">BACK TO RESULTS</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   CAR RACING: ENGLISH CHALLENGE YEAR 6 - SINGLE-FILE COMPLETE CODE
+   Developed with HTML5 Canvas 2D, Web Audio API & Pure JavaScript.
+   ========================================================================== */
+
+// --- 1. WEB AUDIO SYNTHESIZER (No external files needed) ---
+class AudioController {
+  constructor() {
+    this.ctx = null;
+    this.muted = false;
+  }
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+  toggle() {
+    this.muted = !this.muted;
+    return !this.muted;
+  }
+  playCoin() {
+    if (this.muted || !this.ctx) return;
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(987.77, t); // B5
+      osc.frequency.setValueAtTime(1318.51, t + 0.08); // E6
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.3);
+    } catch(e) {}
+  }
+  playCorrect() {
+    if (this.muted || !this.ctx) return;
+    try {
+      const t = this.ctx.currentTime;
+      const chord = [523.25, 659.25, 783.99, 1046.50]; // C Major arpeggio
+      chord.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, t + idx * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.07 + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t + idx * 0.07);
+        osc.stop(t + idx * 0.07 + 0.26);
+      });
+    } catch(e) {}
+  }
+  playWrong() {
+    if (this.muted || !this.ctx) return;
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, t);
+      osc.frequency.linearRampToValueAtTime(140, t + 0.3);
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.36);
+    } catch(e) {}
+  }
+  playHit() {
+    if (this.muted || !this.ctx) return;
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(120, t);
+      osc.frequency.exponentialRampToValueAtTime(40, t + 0.2);
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.21);
+    } catch(e) {}
+  }
+  playFanfare() {
+    if (this.muted || !this.ctx) return;
+    try {
+      const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50];
+      const times = [0, 0.12, 0.24, 0.36, 0.54, 0.70];
+      const t = this.ctx.currentTime;
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.25, t + times[idx]);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + times[idx] + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t + times[idx]);
+        osc.stop(t + times[idx] + 0.3);
+      });
+    } catch(e) {}
+  }
+}
+const audio = new AudioController();
+
+// --- 2. EXACT 30 QUESTIONS FOR YEAR 6 MALAYSIAN ENGLISH CURRICULUM ---
+// 10 for Level 1, 10 for Level 2, 10 for Level 3
+// Balanced A / B / C correct options and real educational explanations.
+const QUESTIONS_DATABASE = [
+  // LEVEL 1: GREEN VALLEY CIRCUIT (Focus: Present/Past tense, Subject-Verb Agreement, Pronouns, Prepositions, Articles, Vocab)
+  {
+    level: 1,
+    qNum: 1,
+    category: "Grammar",
+    skill: "Subject-Verb Agreement",
+    text: "Encik Rahman and his students _______ preparing the school garden today.",
+    options: { A: "is", B: "are", C: "was" },
+    correct: "B",
+    explanation: "'Encik Rahman and his students' is a plural subject, so it takes the plural verb 'are'."
+  },
+  {
+    level: 1,
+    qNum: 2,
+    category: "Grammar",
+    skill: "Simple Past Tense",
+    text: "Last Saturday, Adam _______ his bicycle to the nearby community library.",
+    options: { A: "rode", B: "rides", C: "riding" },
+    correct: "A",
+    explanation: "'Last Saturday' indicates the past; the simple past form of 'ride' is 'rode'."
+  },
+  {
+    level: 1,
+    qNum: 3,
+    category: "Grammar",
+    skill: "Articles",
+    text: "Farah saw _______ injured eagle near Mount Kinabalu during her holiday.",
+    options: { A: "a", B: "an", C: "the" },
+    correct: "B",
+    explanation: "'Injured' starts with a vowel sound (/ɪ/), requiring the indefinite article 'an'."
+  },
+  {
+    level: 1,
+    qNum: 4,
+    category: "Grammar",
+    skill: "Pronouns",
+    text: "The girls washed the racing car all by _______ before the competition.",
+    options: { A: "themselves", B: "herself", C: "theirs" },
+    correct: "A",
+    explanation: "'The girls' is plural third-person; the reflexive pronoun is 'themselves'."
+  },
+  {
+    level: 1,
+    qNum: 5,
+    category: "Grammar",
+    skill: "Prepositions",
+    text: "The school assembly will commence promptly _______ 7:30 a.m. tomorrow.",
+    options: { A: "on", B: "in", C: "at" },
+    correct: "C",
+    explanation: "We use the preposition 'at' for specific clock times."
+  },
+  {
+    level: 1,
+    qNum: 6,
+    category: "Vocabulary",
+    skill: "Antonyms",
+    text: "Choose the word that is opposite in meaning to 'ANCIENT':",
+    options: { A: "Modern", B: "Historic", C: "Famous" },
+    correct: "A",
+    explanation: "'Ancient' refers to long ago in the past; its direct opposite is 'Modern'."
+  },
+  {
+    level: 1,
+    qNum: 7,
+    category: "Grammar",
+    skill: "Simple Present Tense",
+    text: "My mother always _______ fresh fruits from the morning market in Kluang.",
+    options: { A: "buys", B: "buy", C: "buying" },
+    correct: "A",
+    explanation: "'My mother' is singular, so the present tense verb takes an 's' -> 'buys'."
+  },
+  {
+    level: 1,
+    qNum: 8,
+    category: "Vocabulary",
+    skill: "Collective Nouns",
+    text: "A large _______ of curious dolphins swam alongside the fishing boat.",
+    options: { A: "swarm", B: "pod", C: "flock" },
+    correct: "B",
+    explanation: "The collective noun for dolphins and whales is a 'pod'."
+  },
+  {
+    level: 1,
+    qNum: 9,
+    category: "Grammar",
+    skill: "Conjunctions",
+    text: "Mei Ling was tired, _______ she still completed her English essay diligently.",
+    options: { A: "so", B: "or", C: "yet" },
+    correct: "C",
+    explanation: "'Yet' shows contrast between being exhausted and still completing her essay."
+  },
+  {
+    level: 1,
+    qNum: 10,
+    category: "Grammar",
+    skill: "Sentence Structure",
+    text: "Which of the following sentences is punctuated correctly?",
+    options: {
+      A: "wow that car is lightning fast!",
+      B: "“Stop the race immediately!” shouted the marshal.",
+      C: "Where did you put my helmet."
+    },
+    correct: "B",
+    explanation: "Sentence B uses quotation marks, capitalisation, and an exclamation mark correctly."
+  },
+
+  // LEVEL 2: DESERT CHALLENGE CIRCUIT (Focus: Continuous/Future tenses, Comparatives, Adverbs, Modals, Wh-questions)
+  {
+    level: 2,
+    qNum: 11,
+    category: "Grammar",
+    skill: "Past Continuous Tense",
+    text: "While Hakim was fixing the tyre, his pit crew _______ the car engine.",
+    options: { A: "was checking", B: "were checking", C: "are checking" },
+    correct: "B",
+    explanation: "'Pit crew' refers collectively to multiple crew members in action; 'were checking' matches past continuous."
+  },
+  {
+    level: 2,
+    qNum: 12,
+    category: "Grammar",
+    skill: "Comparatives & Superlatives",
+    text: "Mount Kinabalu is the _______ peak in Malaysia and Southeast Asia.",
+    options: { A: "higher", B: "most high", C: "highest" },
+    correct: "C",
+    explanation: "When comparing one among all, use the superlative form 'highest'."
+  },
+  {
+    level: 2,
+    qNum: 13,
+    category: "Grammar",
+    skill: "Modal Verbs",
+    text: "Every driver _______ wear a safety helmet; it is strictly mandatory by law.",
+    options: { A: "must", B: "might", C: "could" },
+    correct: "A",
+    explanation: "'Must' is used to express strict rule, obligation or mandatory necessity."
+  },
+  {
+    level: 2,
+    qNum: 14,
+    category: "Vocabulary",
+    skill: "Vocabulary in Context",
+    text: "The desert road was extremely _______, making the racing car skid slippery.",
+    options: { A: "treacherous", B: "pleasant", C: "spacious" },
+    correct: "A",
+    explanation: "'Treacherous' means hazardous or dangerous, fitting slippery desert tracks."
+  },
+  {
+    level: 2,
+    qNum: 15,
+    category: "Grammar",
+    skill: "Adverbs of Manner",
+    text: "The skilled navigator guided the driver _______ through the dense sandstorm.",
+    options: { A: "cautious", B: "cautiously", C: "caution" },
+    correct: "B",
+    explanation: "An adverb of manner ('cautiously') modifies the action verb 'guided'."
+  },
+  {
+    level: 2,
+    qNum: 16,
+    category: "Grammar",
+    skill: "Future Tense",
+    text: "Our school team _______ in the National Robotics Championship next month.",
+    options: { A: "will compete", B: "competed", C: "competes" },
+    correct: "A",
+    explanation: "'Next month' indicates future time; we use 'will compete'."
+  },
+  {
+    level: 2,
+    qNum: 17,
+    category: "Grammar",
+    skill: "Question Words",
+    text: "“_______ toolbox is left on the pit stop workbench?” asked the mechanic.",
+    options: { A: "Whom", B: "Whose", C: "Who's" },
+    correct: "B",
+    explanation: "'Whose' is the possessive pronoun used to inquire who owns the toolbox."
+  },
+  {
+    level: 2,
+    qNum: 18,
+    category: "Vocabulary",
+    skill: "Synonyms",
+    text: "Choose the word closest in meaning to 'SWIFT':",
+    options: { A: "Rapid", B: "Sluggish", C: "Heavy" },
+    correct: "A",
+    explanation: "'Swift' means quick or moving with great speed; its synonym is 'Rapid'."
+  },
+  {
+    level: 2,
+    qNum: 19,
+    category: "Grammar",
+    skill: "Conjunction of Purpose",
+    text: "Ravi slowed down before the chicane curve _______ he would not crash.",
+    options: { A: "so that", B: "although", C: "unless" },
+    correct: "A",
+    explanation: "'So that' indicates purpose or the reason why Ravi reduced speed."
+  },
+  {
+    level: 2,
+    qNum: 20,
+    category: "Grammar",
+    skill: "Common Errors",
+    text: "Identify the sentence that contains NO grammatical error:",
+    options: {
+      A: "Neither Amir nor his friends is going to the stadium.",
+      B: "Neither Amir nor his friends are going to the stadium.",
+      C: "Neither Amir nor his friends was going to the stadium."
+    },
+    correct: "B",
+    explanation: "In 'neither... nor...', the verb agrees with the closer subject ('his friends' = plural 'are')."
+  },
+
+  // LEVEL 3: NEON CITY GRAND PRIX (Focus: Conditionals, Passive Voice, Reported Speech, Relative Pronouns, Reading Comprehension)
+  {
+    level: 3,
+    qNum: 21,
+    category: "Grammar",
+    skill: "Conditionals",
+    text: "If Danial _______ his speed control, he will secure pole position in the final.",
+    options: { A: "maintains", B: "maintained", C: "will maintain" },
+    correct: "A",
+    explanation: "First conditional rule: If + Simple Present ('maintains'), ... will + base verb ('will secure')."
+  },
+  {
+    level: 3,
+    qNum: 22,
+    category: "Grammar",
+    skill: "Passive Voice",
+    text: "The champion's gold trophy _______ by the Minister of Education at the grand podium.",
+    options: { A: "was presented", B: "presented", C: "were presented" },
+    correct: "A",
+    explanation: "Passive voice for a singular object in the past requires 'was presented'."
+  },
+  {
+    level: 3,
+    qNum: 23,
+    category: "Grammar",
+    skill: "Reported Speech",
+    text: "Siti said, “I am confident about the circuit quiz.” \nIn reported speech: Siti said that she _______ confident about the circuit quiz.",
+    options: { A: "is", B: "was", C: "has been" },
+    correct: "B",
+    explanation: "In reported speech, present tense 'am' shifts back into past tense 'was'."
+  },
+  {
+    level: 3,
+    qNum: 24,
+    category: "Grammar",
+    skill: "Relative Pronouns",
+    text: "The neon racing car _______ engine was upgraded broke the circuit track record.",
+    options: { A: "which", B: "whose", C: "that" },
+    correct: "B",
+    explanation: "'Whose' denotes possession (the car possessing the upgraded engine)."
+  },
+  {
+    level: 3,
+    qNum: 25,
+    category: "Reading",
+    skill: "Reading Comprehension",
+    passage: "“Electric race cars produce zero exhaust emissions. Engineers in Kuala Lumpur design lightweight carbon-fibre bodies with aerodynamic wings, allowing vehicles to reach 220 km/h silently while saving battery energy.”",
+    text: "According to the passage, why are lightweight carbon-fibre bodies designed?",
+    options: {
+      A: "To produce loud roaring engine noises.",
+      B: "To reach high speeds while conserving battery energy.",
+      C: "To carry heavier passengers across the track."
+    },
+    correct: "B",
+    explanation: "The passage directly states the design allows them to 'reach 220 km/h silently while saving battery energy'."
+  },
+  {
+    level: 3,
+    qNum: 26,
+    category: "Reading",
+    skill: "Reading Inference",
+    passage: "“Lina observed the flashing yellow lights on the electronic signboard. Remembering her instructor’s safety advice, she lifted her foot off the accelerator and tightened her grip on the steering wheel.”",
+    text: "What can you infer about Lina from her actions?",
+    options: {
+      A: "She is a cautious and obedient driver.",
+      B: "She wants to crash into the nearest barrier.",
+      C: "She does not understand the traffic signs."
+    },
+    correct: "A",
+    explanation: "Slowing down and recalling safety advice highlights that Lina is careful, observant, and obedient."
+  },
+  {
+    level: 3,
+    qNum: 27,
+    category: "Vocabulary",
+    skill: "Contextual Idioms",
+    text: "The race was neck and neck, but Danish managed to _______ in the final lap.",
+    options: { A: "bite the dust", B: "pull ahead", C: "hit the sack" },
+    correct: "B",
+    explanation: "'Pull ahead' means to take the lead or gain an advantage in a race."
+  },
+  {
+    level: 3,
+    qNum: 28,
+    category: "Grammar",
+    skill: "Sentence Transformation",
+    text: "Which sentence expresses the same meaning as: 'No other racer in Year 6 is as fast as Haris'?",
+    options: {
+      A: "Haris is faster than any other racer in Year 6.",
+      B: "Other racers in Year 6 are faster than Haris.",
+      C: "Haris is the slowest racer in Year 6."
+    },
+    correct: "A",
+    explanation: "Option A accurately transforms the positive degree comparison into a comparative degree."
+  },
+  {
+    level: 3,
+    qNum: 29,
+    category: "Grammar",
+    skill: "Mixed Tenses",
+    text: "By the time the chequered flag waved, the team _______ already celebrated their triumph.",
+    options: { A: "have", B: "had", C: "has" },
+    correct: "B",
+    explanation: "Past perfect tense ('had celebrated') is used for an action completed before another past event."
+  },
+  {
+    level: 3,
+    qNum: 30,
+    category: "Grammar",
+    skill: "Grammar in Context",
+    text: "Neither the high-speed cyber drones nor the safety barrier _______ damaged during the collision test.",
+    options: { A: "were", B: "was", C: "are" },
+    correct: "B",
+    explanation: "With 'neither... nor...', the verb agrees with the singular subject closer to it ('safety barrier' = 'was')."
+  }
+];
+
+// --- 3. TRACK DEFINITIONS FOR THREE DISTINCT LEVELS ---
+// Each level has custom background colors, path coordinates, themes, and obstacles.
+const LEVEL_CONFIGS = [
+  {
+    level: 1,
+    name: "Level 1 – Beginner Racer",
+    circuitName: "Green Valley Circuit",
+    theme: "park",
+    roadWidth: 95,
+    bgColor: "#27ae60",
+    roadColor: "#4a5568",
+    curbColorA: "#e74c3c",
+    curbColorB: "#ffffff",
+    dashColor: "#ffffff",
+    decorType: "trees",
+    // 10 Waypoints forming a smooth wide looped park circuit
+    waypoints: [
+      { x: 120, y: 150 },
+      { x: 380, y: 110 },
+      { x: 700, y: 130 },
+      { x: 1040, y: 200 },
+      { x: 1080, y: 460 },
+      { x: 880, y: 660 },
+      { x: 560, y: 680 },
+      { x: 280, y: 620 },
+      { x: 110, y: 480 },
+      { x: 100, y: 260 }
+    ],
+    // 10 Smiley Coins placed along the racing track
+    coins: [
+      { x: 230, y: 128 },
+      { x: 540, y: 118 },
+      { x: 860, y: 155 },
+      { x: 1060, y: 310 },
+      { x: 1000, y: 550 },
+      { x: 740, y: 675 },
+      { x: 420, y: 650 },
+      { x: 180, y: 560 },
+      { x: 105, y: 370 },
+      { x: 110, y: 200 }
+    ],
+    // Light obstacles: soft cones & crates
+    obstacles: [
+      { x: 460, y: 135, type: "cone", r: 16 },
+      { x: 940, y: 170, type: "crate", r: 18 },
+      { x: 1040, y: 420, type: "cone", r: 16 },
+      { x: 620, y: 660, type: "crate", r: 18 },
+      { x: 220, y: 590, type: "cone", r: 16 }
+    ]
+  },
+  {
+    level: 2,
+    name: "Level 2 – Speed Master",
+    circuitName: "Desert Challenge Circuit",
+    theme: "desert",
+    roadWidth: 80,
+    bgColor: "#d35400",
+    roadColor: "#2d3436",
+    curbColorA: "#f39c12",
+    curbColorB: "#ffffff",
+    dashColor: "#f1c40f",
+    decorType: "cacti",
+    // 10 Waypoints with sharper turns & chicane twists
+    waypoints: [
+      { x: 130, y: 160 },
+      { x: 450, y: 130 },
+      { x: 620, y: 280 },
+      { x: 860, y: 160 },
+      { x: 1080, y: 280 },
+      { x: 940, y: 520 },
+      { x: 720, y: 430 },
+      { x: 520, y: 680 },
+      { x: 260, y: 630 },
+      { x: 120, y: 380 }
+    ],
+    coins: [
+      { x: 280, y: 142 },
+      { x: 540, y: 200 },
+      { x: 730, y: 225 },
+      { x: 970, y: 215 },
+      { x: 1030, y: 400 },
+      { x: 820, y: 480 },
+      { x: 610, y: 560 },
+      { x: 380, y: 660 },
+      { x: 170, y: 520 },
+      { x: 125, y: 250 }
+    ],
+    // Desert obstacles: Cones, Crates, Oil Slicks & Cartoon Bombs
+    obstacles: [
+      { x: 380, y: 145, type: "oil", r: 24 },
+      { x: 630, y: 250, type: "crate", r: 18 },
+      { x: 810, y: 180, type: "bomb", r: 18 },
+      { x: 1060, y: 330, type: "oil", r: 24 },
+      { x: 870, y: 510, type: "cone", r: 16 },
+      { x: 680, y: 460, type: "bomb", r: 18 },
+      { x: 450, y: 670, type: "oil", r: 24 },
+      { x: 210, y: 580, type: "crate", r: 18 }
+    ]
+  },
+  {
+    level: 3,
+    name: "Level 3 – English Champion",
+    circuitName: "Neon City Grand Prix",
+    theme: "neon",
+    roadWidth: 74,
+    bgColor: "#090d1a",
+    roadColor: "#131b2e",
+    curbColorA: "#00d2ff",
+    curbColorB: "#ff3366",
+    dashColor: "#00ffff",
+    decorType: "cyber",
+    // 10 Waypoints forming an intricate grand prix loop
+    waypoints: [
+      { x: 140, y: 160 },
+      { x: 380, y: 140 },
+      { x: 540, y: 290 },
+      { x: 780, y: 150 },
+      { x: 1060, y: 220 },
+      { x: 1060, y: 560 },
+      { x: 820, y: 680 },
+      { x: 590, y: 520 },
+      { x: 340, y: 680 },
+      { x: 120, y: 460 }
+    ],
+    coins: [
+      { x: 250, y: 148 },
+      { x: 450, y: 210 },
+      { x: 650, y: 220 },
+      { x: 920, y: 180 },
+      { x: 1060, y: 380 },
+      { x: 940, y: 630 },
+      { x: 700, y: 600 },
+      { x: 480, y: 600 },
+      { x: 220, y: 580 },
+      { x: 128, y: 300 }
+    ],
+    // High-tech moving and static obstacles
+    obstacles: [
+      { x: 320, y: 145, type: "bomb", r: 18 },
+      { x: 500, y: 260, type: "moving", r: 16, vx: 1.2, minX: 470, maxX: 530 },
+      { x: 720, y: 190, type: "oil", r: 24 },
+      { x: 980, y: 200, type: "bomb", r: 18 },
+      { x: 1060, y: 470, type: "moving", r: 16, vy: 1.5, minY: 430, maxY: 510 },
+      { x: 880, y: 670, type: "crate", r: 18 },
+      { x: 640, y: 550, type: "oil", r: 24 },
+      { x: 420, y: 650, type: "moving", r: 16, vx: 1.2, minX: 390, maxX: 450 },
+      { x: 170, y: 530, type: "bomb", r: 18 }
+    ]
+  }
+];
+
+// --- 4. GAME STATE MANAGEMENT ---
+const GameState = {
+  playerName: "",
+  playerClass: "",
+  carColor: "#ff3366",
+  currentLevelIndex: 0, // 0 = L1, 1 = L2, 2 = L3
+  score: 0,
+  levelScores: [0, 0, 0],
+  coinsCollectedTotal: 0,
+  coinsCollectedLevel: 0,
+  questionsAnsweredTotal: 0,
+  correctAnswersTotal: 0,
+  wrongAnswersTotal: 0,
+  isPaused: false,
+  isGameOver: false,
+  activeQuiz: null,
+  activeCoinIndex: -1,
+  // Detailed review logger
+  reviewLog: [],
+  // Category stats for awards
+  stats: {
+    grammarCorrect: 0,
+    grammarTotal: 0,
+    vocabCorrect: 0,
+    vocabTotal: 0,
+    readingCorrect: 0,
+    readingTotal: 0
+  }
+};
+
+// --- 5. CAR RACING CONTROLS & PHYSICS ---
+class Car {
+  constructor() {
+    this.reset(120, 160, 0);
+  }
+  reset(x, y, angle) {
+    this.x = x;
+    this.y = y;
+    this.vx = 0;
+    this.vy = 0;
+    this.speed = 0;
+    this.maxSpeed = 4.6;
+    this.accel = 0.16;
+    this.friction = 0.94;
+    this.turnSpeed = 0.052;
+    this.angle = angle || 0;
+    this.width = 38;
+    this.height = 20;
+    this.skidTime = 0;
+    this.spinVel = 0;
+  }
+  update(keys) {
+    if (GameState.isPaused) return;
+
+    // Handle Oil Slick spin
+    if (this.skidTime > 0) {
+      this.skidTime--;
+      this.angle += this.spinVel;
+      this.speed *= 0.92;
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed;
+      return;
+    }
+
+    // Steering
+    if (keys.left) {
+      if (Math.abs(this.speed) > 0.15) {
+        this.angle -= this.turnSpeed * (this.speed > 0 ? 1 : -1);
+      }
+    }
+    if (keys.right) {
+      if (Math.abs(this.speed) > 0.15) {
+        this.angle += this.turnSpeed * (this.speed > 0 ? 1 : -1);
+      }
+    }
+
+    // Gas & Reverse
+    if (keys.up) {
+      this.speed += this.accel;
+      if (this.speed > this.maxSpeed) this.speed = this.maxSpeed;
+    } else if (keys.down) {
+      this.speed -= this.accel * 0.8;
+      if (this.speed < -this.maxSpeed * 0.45) this.speed = -this.maxSpeed * 0.45;
+    } else {
+      this.speed *= this.friction;
+      if (Math.abs(this.speed) < 0.04) this.speed = 0;
+    }
+
+    // Position updates
+    this.x += Math.cos(this.angle) * this.speed;
+    this.y += Math.sin(this.angle) * this.speed;
+
+    // Keep car nicely within visible boundaries
+    this.x = Math.max(25, Math.min(1175, this.x));
+    this.y = Math.max(25, Math.min(775, this.y));
+  }
+  triggerSkid() {
+    this.skidTime = 40;
+    this.spinVel = 0.22;
+  }
+}
+
+const racer = new Car();
+const inputKeys = { up: false, down: false, left: false, right: false };
+
+// --- 6. CANVAS RENDERING ENGINE ---
+const canvas = document.getElementById("raceCanvas");
+const ctx = canvas.getContext("2d");
+
+// Responsive resolution sizing (internal 1200x800 coordinate scale)
+function resizeCanvas() {
+  const container = document.getElementById("game-container");
+  const rect = container.getBoundingClientRect();
+  canvas.width = 1200;
+  canvas.height = 800;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// Active Level Runtime Data
+let currentCoins = [];
+let currentObstacles = [];
+let particles = [];
+
+function loadLevel(levelIndex) {
+  GameState.currentLevelIndex = levelIndex;
+  GameState.coinsCollectedLevel = 0;
+  const cfg = LEVEL_CONFIGS[levelIndex];
+
+  // Deep clone coins & obstacles for runtime modifications
+  currentCoins = cfg.coins.map((c, idx) => ({
+    x: c.x,
+    y: c.y,
+    collected: false,
+    id: idx,
+    bobOffset: Math.random() * Math.PI * 2
+  }));
+
+  currentObstacles = cfg.obstacles.map(o => ({
+    ...o,
+    initX: o.x,
+    initY: o.y
+  }));
+
+  // Position car at start line
+  const startP = cfg.waypoints[0];
+  const nextP = cfg.waypoints[1];
+  const initAngle = Math.atan2(nextP.y - startP.y, nextP.x - startP.x);
+  racer.reset(startP.x, startP.y, initAngle);
+
+  updateHUD();
+  showFloatingNotice(`Welcome to ${cfg.circuitName}! Collect Smiley Coins! 😊`);
+}
+
+// Draw Track Road with smooth closed spline curves & curbs
+function drawTrack(cfg) {
+  // 1. Draw thematic background
+  ctx.fillStyle = cfg.bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Background cartoon decorations (Trees for L1, Cacti for L2, Cyber Grid for L3)
+  if (cfg.decorType === "trees") {
+    drawParkDecorations();
+  } else if (cfg.decorType === "cacti") {
+    drawDesertDecorations();
+  } else if (cfg.decorType === "cyber") {
+    drawCyberGrid();
+  }
+
+  const pts = cfg.waypoints;
+  const n = pts.length;
+
+  // 2. Draw outer curb layer
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n];
+    const p1 = pts[i];
+    const p2 = pts[(i + 1) % n];
+    const p3 = pts[(i + 2) % n];
+    // Catmull-Rom to Cubic Bezier curve conversion for buttery-smooth tracks
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+  }
+  ctx.closePath();
+  ctx.lineWidth = cfg.roadWidth + 18;
+  ctx.strokeStyle = cfg.curbColorA;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.stroke();
+
+  // Striped curb pattern
+  ctx.setLineDash([20, 20]);
+  ctx.lineWidth = cfg.roadWidth + 18;
+  ctx.strokeStyle = cfg.curbColorB;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 3. Draw main asphalt surface
+  ctx.lineWidth = cfg.roadWidth;
+  ctx.strokeStyle = cfg.roadColor;
+  ctx.stroke();
+
+  // 4. Draw central dashed line
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = cfg.dashColor;
+  ctx.setLineDash([18, 16]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // 5. Draw Start/Finish chequered line
+  drawChequeredFinishLine(pts[0], pts[1], cfg.roadWidth);
+}
+
+function drawChequeredFinishLine(p1, p2, width) {
+  const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+  const perp = angle + Math.PI / 2;
+  const halfW = width / 2;
+
+  ctx.save();
+  ctx.translate(p1.x, p1.y);
+  ctx.rotate(angle);
+
+  const checkSize = 8;
+  const rows = 2;
+  const cols = Math.floor(width / checkSize);
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      ctx.fillStyle = (r + c) % 2 === 0 ? "#ffffff" : "#000000";
+      ctx.fillRect(-checkSize + r * checkSize, -halfW + c * checkSize, checkSize, checkSize);
+    }
+  }
+  ctx.restore();
+}
+
+// Background environmental drawing functions
+function drawParkDecorations() {
+  ctx.save();
+  // Friendly cartoon trees & flower dots
+  const treePositions = [
+    [70, 70], [250, 40], [500, 50], [850, 60], [1120, 100],
+    [1140, 650], [700, 450], [450, 400], [220, 360], [70, 720], [600, 750]
+  ];
+  treePositions.forEach(([x, y]) => {
+    // Tree shadow
+    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.beginPath();
+    ctx.arc(x + 5, y + 5, 26, 0, Math.PI * 2);
+    ctx.fill();
+    // Tree canopy
+    ctx.fillStyle = "#1e824c";
+    ctx.beginPath();
+    ctx.arc(x, y, 25, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#2ecc71";
+    ctx.beginPath();
+    ctx.arc(x - 5, y - 5, 18, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawDesertDecorations() {
+  ctx.save();
+  // Desert dunes & saguaro cacti
+  ctx.fillStyle = "#e67e22";
+  ctx.beginPath();
+  ctx.arc(350, 320, 90, 0, Math.PI * 2);
+  ctx.arc(800, 300, 110, 0, Math.PI * 2);
+  ctx.fill();
+
+  const cacti = [[200, 260], [650, 100], [920, 380], [780, 580], [160, 680]];
+  cacti.forEach(([x, y]) => {
+    ctx.fillStyle = "#27ae60";
+    ctx.fillRect(x - 4, y - 20, 8, 40);
+    ctx.fillRect(x - 14, y - 10, 10, 6);
+    ctx.fillRect(x - 14, y - 18, 6, 12);
+    ctx.fillRect(x + 4, y - 4, 10, 6);
+    ctx.fillRect(x + 8, y - 12, 6, 12);
+  });
+  ctx.restore();
+}
+
+function drawCyberGrid() {
+  ctx.save();
+  ctx.strokeStyle = "rgba(0, 210, 255, 0.08)";
+  ctx.lineWidth = 1;
+  const step = 50;
+  for (let x = 0; x < canvas.width; x += step) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += step) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+  // Futuristic buildings on edges
+  ctx.fillStyle = "rgba(16, 24, 48, 0.9)";
+  ctx.strokeStyle = "#00d2ff";
+  ctx.lineWidth = 1.5;
+  const bldgs = [[30, 20, 80, 70], [450, 10, 110, 60], [1070, 40, 90, 90], [1050, 660, 110, 90], [30, 660, 80, 100]];
+  bldgs.forEach(([x, y, w, h]) => {
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+  });
+  ctx.restore();
+}
+
+// 7. DRAW SMILEY COINS (MANDATORY GAMEPLAY MECHANIC)
+function drawSmileyCoins(time) {
+  currentCoins.forEach(coin => {
+    if (coin.collected) return;
+    const floatY = Math.sin(time * 0.005 + coin.bobOffset) * 4;
+    const cx = coin.x;
+    const cy = coin.y + floatY;
+    const r = 16;
+
+    ctx.save();
+    // Glowing aura
+    ctx.shadowColor = "#ffd000";
+    ctx.shadowBlur = 12;
+
+    // Golden Coin Body
+    ctx.fillStyle = "#ffd000";
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Coin Border
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = "#e67e22";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Inner rim
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 3.5, 0, Math.PI * 2);
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Friendly Smiley Eyes
+    ctx.fillStyle = "#333333";
+    ctx.beginPath();
+    ctx.arc(cx - 5, cy - 3, 2.2, 0, Math.PI * 2);
+    ctx.arc(cx + 5, cy - 3, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Smiley Mouth
+    ctx.beginPath();
+    ctx.arc(cx, cy + 1, 6.5, 0.15 * Math.PI, 0.85 * Math.PI, false);
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = "#333333";
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    ctx.restore();
+  });
+}
+
+// 8. DRAW OBSTACLES (BOMBS, CRATES, CONES, OIL SLICKS, MOVING BARRIERS)
+function drawObstacles() {
+  currentObstacles.forEach(obs => {
+    ctx.save();
+    if (obs.type === "cone") {
+      // Traffic cone
+      ctx.fillStyle = "#ff6b1a";
+      ctx.beginPath();
+      ctx.arc(obs.x, obs.y, obs.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(obs.x, obs.y, obs.r * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (obs.type === "crate") {
+      // Wooden Crate
+      ctx.fillStyle = "#b9770e";
+      ctx.fillRect(obs.x - obs.r, obs.y - obs.r, obs.r * 2, obs.r * 2);
+      ctx.strokeStyle = "#7e4a05";
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(obs.x - obs.r, obs.y - obs.r, obs.r * 2, obs.r * 2);
+      // X marks the box
+      ctx.beginPath();
+      ctx.moveTo(obs.x - obs.r + 2, obs.y - obs.r + 2);
+      ctx.lineTo(obs.x + obs.r - 2, obs.y + obs.r - 2);
+      ctx.moveTo(obs.x + obs.r - 2, obs.y - obs.r + 2);
+      ctx.lineTo(obs.x - obs.r + 2, obs.y + obs.r - 2);
+      ctx.stroke();
+    } else if (obs.type === "oil") {
+      // Oil Slick puddle
+      ctx.fillStyle = "rgba(20, 20, 20, 0.85)";
+      ctx.beginPath();
+      ctx.ellipse(obs.x, obs.y, obs.r * 1.3, obs.r * 0.75, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(100, 100, 255, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (obs.type === "bomb") {
+      // Cartoon round black bomb with burning fuse
+      ctx.fillStyle = "#111111";
+      ctx.beginPath();
+      ctx.arc(obs.x, obs.y, obs.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#555";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Fuse
+      ctx.strokeStyle = "#d35400";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(obs.x, obs.y - obs.r);
+      ctx.quadraticCurveTo(obs.x + 8, obs.y - obs.r - 8, obs.x + 12, obs.y - obs.r - 4);
+      ctx.stroke();
+      // Spark
+      ctx.fillStyle = "#ffd000";
+      ctx.beginPath();
+      ctx.arc(obs.x + 12, obs.y - obs.r - 4, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (obs.type === "moving") {
+      // Futuristic Neon Cyber Barrier
+      ctx.fillStyle = "#ff007f";
+      ctx.shadowColor = "#ff007f";
+      ctx.shadowBlur = 10;
+      ctx.fillRect(obs.x - obs.r, obs.y - obs.r * 0.7, obs.r * 2, obs.r * 1.4);
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(obs.x - obs.r, obs.y - obs.r * 0.7, obs.r * 2, obs.r * 1.4);
+    }
+    ctx.restore();
+  });
+}
+
+// 9. DRAW PLAYER'S 2D TOP-DOWN RACING CAR
+function drawPlayerCar() {
+  ctx.save();
+  ctx.translate(racer.x, racer.y);
+  ctx.rotate(racer.angle);
+
+  // Car Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  ctx.beginPath();
+  ctx.roundRect(-racer.width / 2 + 3, -racer.height / 2 + 3, racer.width, racer.height, 6);
+  ctx.fill();
+
+  // Wheels (4 tyres)
+  ctx.fillStyle = "#111111";
+  const wheelW = 10;
+  const wheelH = 5;
+  ctx.fillRect(-racer.width / 2 + 5, -racer.height / 2 - 2, wheelW, wheelH); // Front-left
+  ctx.fillRect(-racer.width / 2 + 5, racer.height / 2 - 3, wheelW, wheelH);  // Front-right
+  ctx.fillRect(racer.width / 2 - 13, -racer.height / 2 - 2, wheelW, wheelH); // Rear-left
+  ctx.fillRect(racer.width / 2 - 13, racer.height / 2 - 3, wheelW, wheelH);  // Rear-right
+
+  // Chassis / Body
+  ctx.fillStyle = GameState.carColor;
+  ctx.beginPath();
+  ctx.roundRect(-racer.width / 2, -racer.height / 2, racer.width, racer.height, 6);
+  ctx.fill();
+
+  // Racing Stripes
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(-racer.width / 2 + 4, -3, racer.width - 8, 6);
+
+  // Windshield & Roof Cockpit
+  ctx.fillStyle = "#0f172a";
+  ctx.beginPath();
+  ctx.roundRect(-8, -racer.height / 2 + 4, 16, racer.height - 8, 3);
+  ctx.fill();
+
+  // Headlights
+  ctx.fillStyle = "#ffd000";
+  ctx.fillRect(racer.width / 2 - 2, -racer.height / 2 + 2, 2, 4);
+  ctx.fillRect(racer.width / 2 - 2, racer.height / 2 - 6, 2, 4);
+
+  // Rear lights
+  ctx.fillStyle = "#ff0033";
+  ctx.fillRect(-racer.width / 2, -racer.height / 2 + 2, 2, 3);
+  ctx.fillRect(-racer.width / 2, racer.height / 2 - 5, 2, 3);
+
+  ctx.restore();
+}
+
+// 10. PARTICLE BURSTS & CONFETTI
+function createParticleBurst(x, y, color, count = 18) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const spd = 1.5 + Math.random() * 4;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      color: color || "#ffd000",
+      life: 1.0,
+      decay: 0.02 + Math.random() * 0.03,
+      size: 3 + Math.random() * 4
+    });
+  }
+}
+
+function updateAndDrawParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= p.decay;
+    if (p.life <= 0) {
+      particles.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// --- 11. GAME MECHANICS: COLLISIONS & COIN TRIGGERING ---
+function handleCollisions() {
+  if (GameState.isPaused) return;
+
+  // A. Check Smiley Coin Pickups (Central Learning Mechanic)
+  currentCoins.forEach((coin, idx) => {
+    if (coin.collected) return;
+    const dist = Math.hypot(racer.x - coin.x, racer.y - coin.y);
+    if (dist < 28) {
+      // 1. Mark coin as collected
+      coin.collected = true;
+      GameState.coinsCollectedTotal++;
+      GameState.coinsCollectedLevel++;
+      GameState.score += 2; // +2 bonus for collecting smiley coin
+      audio.playCoin();
+      createParticleBurst(coin.x, coin.y, "#ffd000", 24);
+      updateHUD();
+
+      // 2. Trigger quiz immediately with a unique, unanswered question
+      triggerQuizForLevel(GameState.currentLevelIndex, GameState.coinsCollectedLevel - 1);
+    }
+  });
+
+  // B. Check Obstacles Collision
+  currentObstacles.forEach(obs => {
+    // Update moving obstacle bounds
+    if (obs.type === "moving") {
+      if (obs.vx) {
+        obs.x += obs.vx;
+        if (obs.x < obs.minX || obs.x > obs.maxX) obs.vx *= -1;
+      }
+      if (obs.vy) {
+        obs.y += obs.vy;
+        if (obs.y < obs.minY || obs.y > obs.maxY) obs.vy *= -1;
+      }
+    }
+
+    const dist = Math.hypot(racer.x - obs.x, racer.y - obs.y);
+    if (dist < obs.r + 14) {
+      handleObstacleHit(obs);
+    }
+  });
+}
+
+let lastHitTime = 0;
+function handleObstacleHit(obs) {
+  const now = performance.now();
+  if (now - lastHitTime < 1200) return; // Prevent repetitive multi-hit spam
+  lastHitTime = now;
+
+  audio.playHit();
+
+  if (obs.type === "oil") {
+    racer.triggerSkid();
+    showFloatingNotice("⚠️ Oil Slick! The car is skidding!");
+    return;
+  }
+
+  // Deduct 2 points for hazard hit (minimum score 0)
+  GameState.score = Math.max(0, GameState.score - 2);
+  updateHUD();
+
+  // Screen Shake Animation
+  const container = document.getElementById("game-container");
+  container.classList.add("screen-shake");
+  setTimeout(() => container.classList.remove("screen-shake"), 350);
+
+  // Bounce car slightly back
+  racer.speed = -1.5;
+
+  if (obs.type === "bomb") {
+    createParticleBurst(obs.x, obs.y, "#ff3366", 30);
+    showFloatingNotice("💥 BOOM! Bomb hit: -2 Marks!");
+  } else {
+    createParticleBurst(obs.x, obs.y, "#f39c12", 15);
+    showFloatingNotice("⚠️ Obstacle hit: -2 Marks!");
+  }
+}
+
+function showFloatingNotice(text) {
+  const el = document.getElementById("floating-msg");
+  el.textContent = text;
+  el.style.display = "block";
+  clearTimeout(el.timer);
+  el.timer = setTimeout(() => {
+    el.style.display = "none";
+  }, 2400);
+}
+
+// --- 12. QUIZ MODAL & EDUCATIONAL EVALUATION ---
+function triggerQuizForLevel(levelIdx, questionIdxInLevel) {
+  GameState.isPaused = true;
+  racer.speed = 0;
+
+  // Retrieve exact question from DB
+  const globalQIndex = levelIdx * 10 + questionIdxInLevel;
+  const qData = QUESTIONS_DATABASE[globalQIndex];
+  GameState.activeQuiz = { ...qData, globalIndex: globalQIndex };
+
+  // Fill in Quiz Modal Elements
+  document.getElementById("quiz-qnum").textContent = `QUESTION ${questionIdxInLevel + 1}/10`;
+  document.getElementById("quiz-level-label").textContent = LEVEL_CONFIGS[levelIdx].circuitName.toUpperCase();
+  document.getElementById("quiz-skill").textContent = `${qData.category} • ${qData.skill}`;
+
+  // Optional passage display
+  const passageEl = document.getElementById("quiz-passage");
+  if (qData.passage) {
+    passageEl.textContent = qData.passage;
+    passageEl.style.display = "block";
+  } else {
+    passageEl.style.display = "none";
+  }
+
+  document.getElementById("quiz-text").textContent = qData.text;
+  document.getElementById("opt-a-text").textContent = qData.options.A;
+  document.getElementById("opt-b-text").textContent = qData.options.B;
+  document.getElementById("opt-c-text").textContent = qData.options.C;
+
+  // Reset Button States & Feedback Box
+  document.querySelectorAll(".option-btn").forEach(btn => {
+    btn.className = "option-btn";
+    btn.disabled = false;
+  });
+  document.getElementById("quiz-feedback").style.display = "none";
+  document.getElementById("btn-continue").style.display = "none";
+
+  // Reveal Modal
+  document.getElementById("quiz-modal").classList.remove("hidden");
+}
+
+function handleAnswerSelection(chosenOpt) {
+  const q = GameState.activeQuiz;
+  if (!q) return;
+
+  const isCorrect = (chosenOpt === q.correct);
+
+  // Disable all options immediately to prevent multiple clicks
+  document.querySelectorAll(".option-btn").forEach(btn => {
+    btn.disabled = true;
+    const opt = btn.getAttribute("data-opt");
+    if (opt === q.correct) btn.classList.add("correct");
+    if (opt === chosenOpt && !isCorrect) btn.classList.add("wrong");
+  });
+
+  // Update statistics & academic categorization
+  GameState.questionsAnsweredTotal++;
+  if (q.category === "Grammar") {
+    GameState.stats.grammarTotal++;
+    if (isCorrect) GameState.stats.grammarCorrect++;
+  } else if (q.category === "Vocabulary") {
+    GameState.stats.vocabTotal++;
+    if (isCorrect) GameState.stats.vocabCorrect++;
+  } else if (q.category === "Reading") {
+    GameState.stats.readingTotal++;
+    if (isCorrect) GameState.stats.readingCorrect++;
+  }
+
+  // Update Score: +10 for correct, -5 for wrong (floor at 0)
+  if (isCorrect) {
+    GameState.correctAnswersTotal++;
+    GameState.score += 10;
+    GameState.levelScores[GameState.currentLevelIndex] += 10;
+    audio.playCorrect();
+  } else {
+    GameState.wrongAnswersTotal++;
+    GameState.score = Math.max(0, GameState.score - 5);
+    GameState.levelScores[GameState.currentLevelIndex] = Math.max(0, GameState.levelScores[GameState.currentLevelIndex] - 5);
+    audio.playWrong();
+  }
+
+  // Save detailed record for REVIEW MY ANSWERS
+  GameState.reviewLog.push({
+    qNum: q.globalIndex + 1,
+    level: q.level,
+    skill: q.skill,
+    text: q.text,
+    passage: q.passage || null,
+    chosen: chosenOpt,
+    correct: q.correct,
+    isCorrect: isCorrect,
+    explanation: q.explanation
+  });
+
+  // Display Feedback
+  const fbBox = document.getElementById("quiz-feedback");
+  const fbHeader = document.getElementById("feedback-header");
+  const fbDetail = document.getElementById("feedback-detail");
+
+  fbBox.style.display = "block";
+  if (isCorrect) {
+    fbHeader.innerHTML = "✨ Correct! Great driving! (+10 Marks)";
+    fbHeader.style.color = "#2ecc71";
+  } else {
+    fbHeader.innerHTML = `❌ Not quite! Keep trying! (-5 Marks) • Correct: Option ${q.correct}`;
+    fbHeader.style.color = "#e74c3c";
+  }
+  fbDetail.innerHTML = `<strong>Explanation:</strong> ${q.explanation}`;
+
+  updateHUD();
+  document.getElementById("btn-continue").style.display = "block";
+}
+
+// Resume race after closing quiz modal
+function continueRace() {
+  document.getElementById("quiz-modal").classList.add("hidden");
+  GameState.activeQuiz = null;
+  GameState.isPaused = false;
+
+  // Check if all 10 questions of the current level are answered
+  if (GameState.coinsCollectedLevel >= 10) {
+    showLevelCompletion();
+  }
+}
+
+// --- 13. LEVEL TRANSITION & COMPLETION ---
+function showLevelCompletion() {
+  GameState.isPaused = true;
+  racer.speed = 0;
+
+  const currentLvl = GameState.currentLevelIndex;
+  audio.playFanfare();
+
+  if (currentLvl < 2) {
+    // Show intermediate level completion screen
+    const lvlScreen = document.getElementById("level-complete-screen");
+    document.getElementById("lvl-done-title").textContent = `${LEVEL_CONFIGS[currentLvl].circuitName} COMPLETED!`;
+    document.getElementById("lvl-done-score").textContent = GameState.levelScores[currentLvl];
+    
+    // Count correct for this level
+    const lvlCorrect = GameState.reviewLog.filter(r => r.level === currentLvl + 1 && r.isCorrect).length;
+    document.getElementById("lvl-done-correct").textContent = `${lvlCorrect}/10`;
+    document.getElementById("lvl-done-total").textContent = GameState.score;
+
+    lvlScreen.classList.remove("hidden");
+  } else {
+    // All 3 Levels (30 Questions) Done! Show Grand Prix Ceremony
+    showFinalResults();
+  }
+}
+
+function proceedToNextLevel() {
+  document.getElementById("level-complete-screen").classList.add("hidden");
+  loadLevel(GameState.currentLevelIndex + 1);
+  GameState.isPaused = false;
+}
+
+// --- 14. ANUGERAH PELUMBA (AWARDS & FINAL CEREMONY) ---
+function showFinalResults() {
+  GameState.isGameOver = true;
+  GameState.isPaused = true;
+  audio.playFanfare();
+
+  const finalScreen = document.getElementById("final-screen");
+
+  document.getElementById("final-name").textContent = GameState.playerName;
+  document.getElementById("final-class").textContent = GameState.playerClass;
+  document.getElementById("final-total-score").textContent = GameState.score;
+  document.getElementById("final-correct-ratio").textContent = `${GameState.correctAnswersTotal}/30`;
+  document.getElementById("final-coins-count").textContent = `${GameState.coinsCollectedTotal}/30`;
+
+  document.getElementById("final-l1-pts").textContent = `${GameState.levelScores[0]} pts`;
+  document.getElementById("final-l2-pts").textContent = `${GameState.levelScores[1]} pts`;
+  document.getElementById("final-l3-pts").textContent = `${GameState.levelScores[2]} pts`;
+
+  // Calculate pure accuracy rate based on 30 questions
+  const accuracyPct = Math.round((GameState.correctAnswersTotal / 30) * 100);
+  document.getElementById("final-accuracy").textContent = `${accuracyPct}%`;
+
+  // Driver Award Tier
+  let awardTitle = "";
+  let trophyIcon = "🏆";
+  if (accuracyPct >= 90) {
+    awardTitle = "ENGLISH RACING CHAMPION!";
+    trophyIcon = "🏆👑";
+  } else if (accuracyPct >= 75) {
+    awardTitle = "EXCELLENT RACER!";
+    trophyIcon = "🥈⭐";
+  } else if (accuracyPct >= 50) {
+    awardTitle = "SKILLED RACER!";
+    trophyIcon = "🥉🏁";
+  } else {
+    awardTitle = "FUTURE CHAMPION!";
+    trophyIcon = "🏎️💡";
+  }
+
+  document.getElementById("final-trophy-icon").textContent = trophyIcon;
+  document.getElementById("final-award-title").textContent = awardTitle;
+  document.getElementById("final-congrats-line").textContent = `CONGRATULATIONS, ${GameState.playerName.toUpperCase()}!`;
+
+  // Calculate Special Categorical Badges (Grammar Master, Vocabulary Star, Reading Champion)
+  const badgesContainer = document.getElementById("final-badges-list");
+  badgesContainer.innerHTML = "";
+
+  const grammarPct = GameState.stats.grammarTotal > 0 ? (GameState.stats.grammarCorrect / GameState.stats.grammarTotal) * 100 : 0;
+  const vocabPct = GameState.stats.vocabTotal > 0 ? (GameState.stats.vocabCorrect / GameState.stats.vocabTotal) * 100 : 0;
+  const readingPct = GameState.stats.readingTotal > 0 ? (GameState.stats.readingCorrect / GameState.stats.readingTotal) * 100 : 0;
+
+  if (grammarPct >= 80) {
+    badgesContainer.innerHTML += `<div class="ach-pill">📘 Grammar Master (${Math.round(grammarPct)}%)</div>`;
+  }
+  if (vocabPct >= 80) {
+    badgesContainer.innerHTML += `<div class="ach-pill">🌟 Vocabulary Star (${Math.round(vocabPct)}%)</div>`;
+  }
+  if (readingPct >= 100) {
+    badgesContainer.innerHTML += `<div class="ach-pill">📖 Reading Champion (100%)</div>`;
+  }
+
+  // Confetti particles
+  for (let i = 0; i < 60; i++) {
+    createParticleBurst(Math.random() * canvas.width, Math.random() * (canvas.height * 0.5), i % 2 === 0 ? "#ffd000" : "#00d2ff", 4);
+  }
+
+  finalScreen.classList.remove("hidden");
+}
+
+// --- 15. ANSWER REVIEW MODAL ---
+function renderAnswerReview() {
+  const container = document.getElementById("review-list");
+  container.innerHTML = "";
+
+  GameState.reviewLog.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.className = `review-item ${item.isCorrect ? "is-correct" : "is-wrong"}`;
+
+    let passageHTML = item.passage ? `<div style="font-style:italic; font-size:0.85rem; color:#cbd5e1; margin-bottom:5px;">Passage: ${item.passage}</div>` : "";
+
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem; margin-bottom:4px;">
+        <span>Q${index + 1}. Level ${item.level} • ${item.skill}</span>
+        <span style="color:${item.isCorrect ? '#2ecc71' : '#e74c3c'}">${item.isCorrect ? '✔ CORRECT' : '✘ WRONG'}</span>
+      </div>
+      ${passageHTML}
+      <div style="font-weight:700; color:#fff; font-size:0.95rem; margin-bottom:6px;">${item.text}</div>
+      <div style="font-size:0.85rem; color:#cbd5e1; margin-bottom:4px;">
+        Your Answer: <strong>Option ${item.chosen}</strong> | Correct: <strong style="color:#2ecc71;">Option ${item.correct}</strong>
+      </div>
+      <div style="font-size:0.85rem; color:#94a3b8; line-height:1.35;">
+        <strong>Explanation:</strong> ${item.explanation}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+
+  document.getElementById("review-modal").classList.remove("hidden");
+}
+
+// --- 16. HUD UPDATER ---
+function updateHUD() {
+  document.getElementById("hud-level").textContent = `LV ${GameState.currentLevelIndex + 1}`;
+  document.getElementById("hud-player").textContent = GameState.playerName || "-";
+  document.getElementById("hud-class").textContent = GameState.playerClass || "-";
+  document.getElementById("hud-score").textContent = GameState.score;
+  document.getElementById("hud-coins").textContent = `${GameState.coinsCollectedLevel}/10`;
+  document.getElementById("hud-questions").textContent = `${GameState.questionsAnsweredTotal}/30`;
+}
+
+// --- 17. MAIN ANIMATION & RENDERING LOOP ---
+let lastFrameTime = performance.now();
+function gameLoop(time) {
+  requestAnimationFrame(gameLoop);
+
+  // Update Car Physics
+  racer.update(inputKeys);
+
+  // Collisions & Triggers
+  handleCollisions();
+
+  // Rendering
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const cfg = LEVEL_CONFIGS[GameState.currentLevelIndex];
+  drawTrack(cfg);
+  drawObstacles();
+  drawSmileyCoins(time);
+  drawPlayerCar();
+  updateAndDrawParticles();
+}
+
+// --- 18. INPUT LISTENERS & TOUCH CONTROLS ---
+// Desktop Keyboard Handler
+window.addEventListener("keydown", (e) => {
+  if (["ArrowUp", "KeyW"].includes(e.code)) inputKeys.up = true;
+  if (["ArrowDown", "KeyS"].includes(e.code)) inputKeys.down = true;
+  if (["ArrowLeft", "KeyA"].includes(e.code)) inputKeys.left = true;
+  if (["ArrowRight", "KeyD"].includes(e.code)) inputKeys.right = true;
+});
+
+window.addEventListener("keyup", (e) => {
+  if (["ArrowUp", "KeyW"].includes(e.code)) inputKeys.up = false;
+  if (["ArrowDown", "KeyS"].includes(e.code)) inputKeys.down = false;
+  if (["ArrowLeft", "KeyA"].includes(e.code)) inputKeys.left = false;
+  if (["ArrowRight", "KeyD"].includes(e.code)) inputKeys.right = false;
+});
+
+// Mobile / Tablet Touch Button Binders
+function bindTouchButton(elementId, keyProp) {
+  const btn = document.getElementById(elementId);
+  if (!btn) return;
+  const start = (e) => { e.preventDefault(); inputKeys[keyProp] = true; };
+  const end = (e) => { e.preventDefault(); inputKeys[keyProp] = false; };
+  btn.addEventListener("touchstart", start, { passive: false });
+  btn.addEventListener("touchend", end, { passive: false });
+  btn.addEventListener("mousedown", start);
+  btn.addEventListener("mouseup", end);
+  btn.addEventListener("mouseleave", end);
+}
+
+bindTouchButton("btn-gas", "up");
+bindTouchButton("btn-brake", "down");
+bindTouchButton("btn-left", "left");
+bindTouchButton("btn-right", "right");
+
+// Auto-detect touchscreen to display on-screen control clusters
+if ("ontouchstart" in window || navigator.maxTouchPoints > 0) {
+  document.getElementById("mobile-controls").style.display = "flex";
+}
+
+// Car color selector click
+document.querySelectorAll(".car-option").forEach(opt => {
+  opt.addEventListener("click", () => {
+    document.querySelectorAll(".car-option").forEach(o => o.classList.remove("selected"));
+    opt.classList.add("selected");
+    GameState.carColor = opt.getAttribute("data-color");
+  });
+});
+
+// Sound Toggle Button
+document.getElementById("btn-sound-toggle").addEventListener("click", () => {
+  audio.init();
+  const isOn = audio.toggle();
+  document.getElementById("btn-sound-toggle").textContent = isOn ? "🔊" : "🔇";
+});
+
+// Answer Options Buttons Click
+document.querySelectorAll(".option-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const chosen = btn.getAttribute("data-opt");
+    handleAnswerSelection(chosen);
+  });
+});
+
+document.getElementById("btn-continue").addEventListener("click", continueRace);
+document.getElementById("btn-next-level").addEventListener("click", proceedToNextLevel);
+document.getElementById("btn-review").addEventListener("click", renderAnswerReview);
+document.getElementById("btn-close-review").addEventListener("click", () => {
+  document.getElementById("review-modal").classList.add("hidden");
+});
+
+// Start Race with Mandatory Form Validation
+document.getElementById("btn-start").addEventListener("click", () => {
+  audio.init();
+  const nameInput = document.getElementById("player-name").value.trim();
+  const classInput = document.getElementById("player-class").value.trim();
+  const errNotice = document.getElementById("start-err");
+
+  if (!nameInput || !classInput) {
+    errNotice.style.display = "block";
+    return;
+  }
+  errNotice.style.display = "none";
+
+  GameState.playerName = nameInput;
+  GameState.playerClass = classInput;
+
+  document.getElementById("start-screen").classList.add("hidden");
+  loadLevel(0);
+});
+
+// Reset / Play Again
+function resetGameFull() {
+  GameState.score = 0;
+  GameState.levelScores = [0, 0, 0];
+  GameState.coinsCollectedTotal = 0;
+  GameState.coinsCollectedLevel = 0;
+  GameState.questionsAnsweredTotal = 0;
+  GameState.correctAnswersTotal = 0;
+  GameState.wrongAnswersTotal = 0;
+  GameState.isPaused = false;
+  GameState.isGameOver = false;
+  GameState.reviewLog = [];
+  GameState.stats = {
+    grammarCorrect: 0, grammarTotal: 0,
+    vocabCorrect: 0, vocabTotal: 0,
+    readingCorrect: 0, readingTotal: 0
+  };
+
+  document.getElementById("final-screen").classList.add("hidden");
+  document.getElementById("review-modal").classList.add("hidden");
+  document.getElementById("level-complete-screen").classList.add("hidden");
+  document.getElementById("quiz-modal").classList.add("hidden");
+
+  loadLevel(0);
+}
+
+document.getElementById("btn-race-again").addEventListener("click", resetGameFull);
+
+document.getElementById("btn-home").addEventListener("click", () => {
+  document.getElementById("final-screen").classList.add("hidden");
+  document.getElementById("start-screen").classList.remove("hidden");
+  GameState.isPaused = true;
+});
+
+// Start Animation loop on window load
+window.onload = function() {
+  requestAnimationFrame(gameLoop);
+};
+</script>
+</body>
+</html>
